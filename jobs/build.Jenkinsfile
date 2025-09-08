@@ -43,6 +43,10 @@ properties([
              description: 'Override coreos-assembler image to use',
              defaultValue: "",
              trim: true),
+      string(name: 'SOURCE_OCI_IMAGE',
+             description: 'Override source_oci_image image to use',
+             defaultValue: "",
+             trim: true),
       booleanParam(name: 'KOLA_RUN_SLEEP',
                    defaultValue: false,
                    description: 'Wait forever at kola tests stage. Implies NO_UPLOAD'),
@@ -106,13 +110,8 @@ def cosa_memory_request_mb = 10.5 * 1024 as Integer
 // cleaner
 def ncpus = ((cosa_memory_request_mb - 512) / 1536) as Integer
 
-def source_oci_image = null
-boolean skip_build = false
-
-if (stream_info.source_oci_image) {
-    skip_build = true
-    source_oci_image = stream_info.source_oci_image
-}
+def source_oci_image = params.SOURCE_OCI_IMAGE ?: stream_info.get("source_oci_image", "")
+boolean skip_build = source_oci_image != ""
 
 echo "Waiting for build-${params.STREAM} lock"
 currentBuild.description = "${build_description} Waiting"
