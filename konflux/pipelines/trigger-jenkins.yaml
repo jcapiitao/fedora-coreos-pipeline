@@ -1,0 +1,55 @@
+kind: Pipeline
+apiVersion: tekton.dev/v1beta1
+metadata:
+  name: trigger-jenkins
+spec:
+  params:
+    - name: JENKINS_HOST_URL
+      type: string
+      description: Server URL on which Jenkins is running
+    - name: JENKINS_SECRETS
+      type: string
+      description: Jenkins secret containing credentials
+      default: jenkins-credentials
+    - name: BUILD_NAME
+      type: string
+      description: Jenkins Job which needs to be triggered
+    - name: BUILD_PARAMS
+      type: array
+      description: Extra arguments to append as a part of CURL request
+      default: []
+    - name: SNAPSHOT
+      description: A list of container images that should undergo testing
+    - name: IMAGE_TAG
+      default: "latest"
+      description: The image tag to use for the testing-farm container.
+    - name: SKIP
+      default: "no"
+  tasks:
+    - name: trigger-build-on-jenkins
+      timeout: "10m"
+      taskRef:
+        params:
+          - name: name
+            value: trigger-jenkins-build
+          - name: kind
+            value: Task
+          - name: bundle
+            value: quay.io/jcapitao/tekton-catalog/task-trigger-jenkins-build:0.1
+        resolver: bundles
+      params:
+        - name: JENKINS_HOST_URL
+          value: $(params.JENKINS_HOST_URL)
+        - name: JENKINS_SECRETS
+          value: $(params.JENKINS_SECRETS)
+        - name: BUILD_NAME
+          value: $(params.BUILD_NAME)
+        - name: BUILD_PARAMS
+          value: 
+            - $(params.BUILD_PARAMS)
+        - name: SNAPSHOT
+          value: $(params.SNAPSHOT)
+        - name: IMAGE_TAG
+          value: $(params.IMAGE_TAG)
+        - name: SKIP
+          value: $(params.SKIP)
